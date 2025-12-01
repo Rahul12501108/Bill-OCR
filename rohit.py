@@ -360,7 +360,7 @@ if __name__ == "__main__":
         # "bills_folder/Screenshot 2025-10-09 174619.png",
         # "bills_folder/blink.png",
         # "bills_folder/trip.jpg"
-        "bills_folder/uber.png"
+        # "bills_folder/1405_1175202410585790.pdf"
     ]
     
     for img_path in image_paths:
