@@ -126,9 +126,12 @@ def extract_text_full(path):
 # -------------------------------------------------------------------------------------
 
 files = [
-    "bills_folder/uber-52542024183425202.pdf",
-    "bills_folder/Screenshot 2025-10-09 174619.png",
-    # "bills_folder/scan.png",
+        # "bills_folder/ketan-medicalbill1052024211446776.pdf",
+        # "bills_folder/rupali-medicalbill105202421167943.pdf",
+        # "bills_folder/uber-52542024183425202.pdf",
+        # "bills_folder/Screenshot 2025-10-09 174619.png",
+        # "bills_folder/ketan-medicalbill1052024211446776.pdf",
+        # "bills_folder/rupali-medicalbill105202421167943.pdf"
 ]
 
 for file in files:

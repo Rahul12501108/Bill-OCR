@@ -33,6 +33,7 @@ date_patterns = [
     r"\b(0[1-9]|1[0-2])[\/\-\.](0[1-9]|[12][0-9]|3[01])[\/\-\.](20\d{2})\b",
     r"\b(0?[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* (20\d{2})\b",
     r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* (0?[1-9]|[12][0-9]|3[01]) (20\d{2})\b",
+    r"\b(0?[1-9]|[12][0-9]|3[01])-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(20\d{2})\b",
     r"\b(0?[1-9]|[12][0-9]|3[01]) (January|February|March|April|May|June|July|August|September|October|November|December),? (20\d{2})\b",
     r"\b(January|February|March|April|May|June|July|August|September|October|November|December) (0?[1-9]|[12][0-9]|3[01]),? (20\d{2})\b"
 ]
@@ -118,8 +119,7 @@ def extract_date_from_text(text):
 # MAIN TEST (WORKS FOR PDF + IMAGES)
 # ----------------------------
 test_files = [
-    "bills_folder/uber-52542024183425202.pdf",
-    "bills_folder/Screenshot 2025-10-09 174619.png"
+    "bills_folder/invoice-4059842024232149839.pdf"
 ]
 
 for file in test_files:
