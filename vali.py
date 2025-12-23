@@ -16,7 +16,8 @@ REQUIRED_COLUMNS = [
     "Invoice Date",
     "Invoice Number",
     "Vendor",
-    "Total Amount"
+    "Total Amount",
+    "String Extracted"
 ]
 
 
@@ -90,12 +91,12 @@ def process_invoice(file_path, df):
     extracted_invoice = extract_invoice(text)
 
     # Known invoice number (STATIC now, API later)
-    KNOWN_INVOICE_NUMBER = "M06HL24I11684390"
+    KNOWN_INVOICE_NUMBER = "MH01CR1759"
 
     known_present = check_known_invoice_in_text(text, KNOWN_INVOICE_NUMBER)
 
     # FINAL invoice number decision
-    if extracted_invoice in ["NA", "Not Found", None, ""] and known_present:
+    if extracted_invoice in ["NA", "Not Found", None, "Invoice Not Found" ""] and known_present:
         invoice_no = KNOWN_INVOICE_NUMBER
     else:
         invoice_no = extracted_invoice
@@ -123,7 +124,9 @@ def process_invoice(file_path, df):
         "Invoice Date": invoice_date,
         "Invoice Number": invoice_no,
         "Vendor": vendor,
-        "Total Amount": total
+        "Total Amount": total,
+        "String Extracted": text
+        
     }
 
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
@@ -154,21 +157,22 @@ def process_files(file_paths):
 if __name__ == "__main__":
 
     files = [
-        "bills_folder/ketan-medicalbill1052024211446776.pdf",
-        "bills_folder/rupali-medicalbill105202421167943.pdf",
-        "bills_folder/uber-52542024183425202.pdf",
-        "bills_folder/Screenshot 2025-10-09 174619.png",
-        "bills_folder/ketan-medicalbill1052024211446776.pdf",
-        "bills_folder/rupali-medicalbill105202421167943.pdf",
-        "bills_folder/1405_21752024105948482.pdf",
-        "bills_folder/1505_1175202411044555.pdf",
-        "bills_folder/13051752024105712915.pdf",
-        "bills_folder/invoice-4059842024232149839.pdf",
-        "bills_folder/uber-12542024182912518.pdf",
-        "bills_folder/uber-22542024183027431.pdf",
-        "bills_folder/uber-32542024183132308.pdf",
-        "bills_folder/uber-42542024183234139.pdf",
-        "bills_folder/uber-52542024183425202.pdf"
+        # "bills_folder/ketan-medicalbill1052024211446776.pdf",
+        # "bills_folder/rupali-medicalbill105202421167943.pdf",
+        # "bills_folder/uber-52542024183425202.pdf",
+        # "bills_folder/Screenshot 2025-10-09 174619.png",
+        # "bills_folder/ketan-medicalbill1052024211446776.pdf",
+        # "bills_folder/rupali-medicalbill105202421167943.pdf",
+        # "bills_folder/1405_21752024105948482.pdf",
+        # "bills_folder/1505_1175202411044555.pdf",
+        # "bills_folder/13051752024105712915.pdf",
+        # "bills_folder/invoice-4059842024232149839.pdf",
+        # "bills_folder/uber-12542024182912518.pdf",
+        # "bills_folder/uber-22542024183027431.pdf",
+        # "bills_folder/uber-32542024183132308.pdf",
+        # "bills_folder/uber-42542024183234139.pdf",
+        # "bills_folder/uber-52542024183425202.pdf",
+        "bills_folder/uber2542024182742481.pdf"
     ]
 
     process_files(files)

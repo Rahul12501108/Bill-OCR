@@ -152,8 +152,8 @@ def extract_text_full(filepath):
 image_paths = [
     # # "bills_folder/invoice-4059842024232149839.pdf",
     # "bills_folder/Screenshot 2025-10-09 174619.png",
-    "bills_folder/ketan-medicalbill1052024211446776.pdf",
-    "bills_folder/rupali-medicalbill105202421167943.pdf"
+    # "bills_folder/ketan-medicalbill1052024211446776.pdf",
+    # "bills_folder/rupali-medicalbill105202421167943.pdf"
 ]
  
 known_invoice_number = "M06HL24I11684390"

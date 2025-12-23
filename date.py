@@ -119,7 +119,7 @@ def extract_date_from_text(text):
 # MAIN TEST (WORKS FOR PDF + IMAGES)
 # ----------------------------
 test_files = [
-    "bills_folder/invoice-4059842024232149839.pdf"
+    # "bills_folder/invoice-4059842024232149839.pdf"
 ]
 
 for file in test_files:

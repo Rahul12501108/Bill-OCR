@@ -118,7 +118,7 @@ pdf_files = [
         # "bills_folder/uber-42542024183234139.pdf",
         # "bills_folder/uber-52542024183425202.pdf",
         # "bills_folder/Screenshot 2025-10-09 174619.png"
-        "bills_folder/ketan-medicalbill1052024211446776.pdf"
+        # "bills_folder/ketan-medicalbill1052024211446776.pdf"
 ]
  
 for pdf in pdf_files:
