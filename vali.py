@@ -96,7 +96,7 @@ def process_invoice(file_path, df):
     known_present = check_known_invoice_in_text(text, KNOWN_INVOICE_NUMBER)
 
     # FINAL invoice number decision
-    if extracted_invoice in ["NA", "Not Found", None, "Invoice Not Found" ""] and known_present:
+    if extracted_invoice in ["NA", "Not Found", None, "Invoice Not Found", ""] and known_present:
         invoice_no = KNOWN_INVOICE_NUMBER
     else:
         invoice_no = extracted_invoice
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         # "bills_folder/uber-32542024183132308.pdf",
         # "bills_folder/uber-42542024183234139.pdf",
         # "bills_folder/uber-52542024183425202.pdf",
-        "bills_folder/uber2542024182742481.pdf"
+        "bills_folder/uber254202418274248.pdf"
     ]
 
     process_files(files)

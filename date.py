@@ -35,7 +35,9 @@ date_patterns = [
     r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* (0?[1-9]|[12][0-9]|3[01]) (20\d{2})\b",
     r"\b(0?[1-9]|[12][0-9]|3[01])-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(20\d{2})\b",
     r"\b(0?[1-9]|[12][0-9]|3[01]) (January|February|March|April|May|June|July|August|September|October|November|December),? (20\d{2})\b",
-    r"\b(January|February|March|April|May|June|July|August|September|October|November|December) (0?[1-9]|[12][0-9]|3[01]),? (20\d{2})\b"
+    r"\b(January|February|March|April|May|June|July|August|September|October|November|December) (0?[1-9]|[12][0-9]|3[01]),? (20\d{2})\b",
+    r"\b(0[1-9]|[12][0-9]|3[01])\-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\-(20\d{2})\b"
+
 ]
 
 
