@@ -28,10 +28,9 @@ def decode_base64_file(base64_string):
 
     os.makedirs("temp_files", exist_ok=True)
 
-    # detect file type
     if file_bytes.startswith(b"%PDF"):
         ext = ".pdf"
-    elif file_bytes[:2] == b"PK":   # Excel xlsx
+    elif file_bytes[:2] == b"PK":
         ext = ".xlsx"
     else:
         ext = ".jpg"
@@ -56,7 +55,7 @@ def check_duplicate(df, emp, inv, date, amt):
     ]
     return not dup.empty
 
-# ================= EXCEL SAVE =================
+# ================= SAVE TO EXCEL =================
 def insert_into_excel(records):
     DB = "claim.xlsx"
 
@@ -74,25 +73,19 @@ def insert_into_excel(records):
     df = pd.concat([df, pd.DataFrame(records)], ignore_index=True)
     df.to_excel(DB, index=False)
 
-# ================= PROCESS EXCEL ATTACHMENT =================
-def process_excel_attachment(path, emp, ctype, voucher_amount, db_df):
+# ================= DAILY EXPENSE (EXCEL) =================
+def process_daily_expense_excel(path, emp, ctype, voucher, db_df):
     df = pd.read_excel(path)
 
     required_cols = ["Invoice_No", "Date", "Total_Amount"]
     for col in required_cols:
         if col not in df.columns:
-            return {"error": f"{col} column missing in Excel"}
+            return {"status": "ERROR", "message": f"{col} column missing in Excel"}
 
-    excel_total = df["Total_Amount"].sum()
+    daily_limit = float(voucher.get("Daily_Limit", 0))
+    voucher_amount = float(voucher.get("Bill_Amount", 0))
 
-    # ✅ check voucher limit
-    if excel_total > voucher_amount + 5:
-        return {
-            "error": "EXCEL_AMOUNT_EXCEEDS_VOUCHER",
-            "excel_total": float(excel_total),
-            "voucher_amount": voucher_amount
-        }
-
+    total_excel_amount = 0
     records = []
 
     for _, row in df.iterrows():
@@ -100,13 +93,23 @@ def process_excel_attachment(path, emp, ctype, voucher_amount, db_df):
         date_obj = normalize_date(row["Date"])
         amt = float(row["Total_Amount"])
 
+        # I️⃣ duplicate check
         if check_duplicate(db_df, emp, inv, str(date_obj), amt):
             return {
-                "error": "DUPLICATE_CLAIM",
-                "invoice_number": inv,
-                "invoice_date": str(date_obj),
-                "total_amount": amt
+                "status": "DUPLICATE_CLAIM",
+                "invoice_number": inv
             }
+
+        # II️⃣ daily limit check
+        if amt > daily_limit:
+            return {
+                "status": "DAILY_LIMIT_EXCEEDED",
+                "invoice_number": inv,
+                "amount": amt,
+                "daily_limit": daily_limit
+            }
+
+        total_excel_amount += amt
 
         records.append({
             "Employee_Code": emp,
@@ -116,18 +119,25 @@ def process_excel_attachment(path, emp, ctype, voucher_amount, db_df):
             "Claim_Type": ctype
         })
 
-    return {"records": records, "total": excel_total}
+    # III️⃣ total <= voucher bill amount
+    if total_excel_amount > voucher_amount:
+        return {
+            "status": "VOUCHER_AMOUNT_EXCEEDED",
+            "excel_total": total_excel_amount,
+            "voucher_amount": voucher_amount
+        }
+
+    return {"records": records, "total": total_excel_amount}
 
 # ================= CLAIM PROCESSOR =================
 def process_claim(data):
 
     claim = data.get("Claim", {})
     emp = claim.get("Employee_Code")
-    ctype = claim.get("Claim_Type")
+    #ctype = claim.get("Claim_Type")
     total_expected = float(claim.get("Total_Bill_Amount", 0))
 
     vouchers = claim.get("Vouchers", [])
-
     db_df = pd.read_excel("claim.xlsx") if os.path.exists("claim.xlsx") else pd.DataFrame()
 
     grand_total = 0
@@ -135,99 +145,89 @@ def process_claim(data):
 
     for v in vouchers:
 
-        expected = float(v.get("Bill_Amount", 0))
+        subtype = v.get("Sub_Type")
+        ctype = v.get("Sub_Type")
         voucher_total = 0
-        voucher_records = []
-
-        from_date = normalize_date(v.get("From_Date"))
-        to_date = normalize_date(v.get("To_Date"))
 
         attachments = v.get("Attachments", [])
+        if not attachments:
+            continue
 
         for att in attachments:
 
-            file_data = att.get("base64File")
-            if not file_data:
-                continue
+            path = decode_base64_file(att.get("base64File"))
 
-            path = decode_base64_file(file_data)
+            # =====================================================
+            # DAILY EXPENSE → ONLY EXCEL
+            # =====================================================
+            if subtype == "Daily_Expense":
 
-            # ========= EXCEL FILE =========
-            if path.endswith(".xlsx"):
-                result = process_excel_attachment(
-                    path, emp, ctype, expected, db_df
+                if not path.endswith(".xlsx"):
+                    return {
+                        "status": "INVALID_ATTACHMENT",
+                        "message": "Daily_Expense requires Excel attachment"
+                    }
+
+                result = process_daily_expense_excel(
+                    path, emp, ctype, v, db_df
                 )
 
-                if "error" in result:
+                if "status" in result and result["status"] != "OK":
                     return result
 
-                voucher_records.extend(result["records"])
+                all_records.extend(result["records"])
                 voucher_total += result["total"]
                 continue
 
-            # ========= PDF / IMAGE =========
-            text = extract_text_full(path)
+            # =====================================================
+            # INDIVIDUAL EXPENSE → PDF / IMAGE
+            # =====================================================
+            if subtype == "Individual_Expense":
 
-            inv = extract_invoice(text)
-            date_text = extract_date_from_text(text)
-            invoice_date = normalize_date(date_text)
-
-            # ✅ date validation
-            if invoice_date and from_date and to_date:
-                if not (from_date <= invoice_date <= to_date):
+                if path.endswith(".xlsx"):
                     return {
-                        "status": "INCORRECT_DATE",
-                        "invoice_date": str(invoice_date),
-                        "from_date": str(from_date),
-                        "to_date": str(to_date),
-                        "message": "Date is not between from and to date"
+                        "status": "INVALID_ATTACHMENT",
+                        "message": "Individual_Expense requires PDF or Image"
                     }
 
-            total = float(extract_total(text) or 0)
+                text = extract_text_full(path)
 
-            if check_duplicate(db_df, emp, inv, str(invoice_date), total):
-                return {
-                    "status": "DUPLICATE_CLAIM",
-                    "invoice_number": inv,
-                    "invoice_date": str(invoice_date),
-                    "total_amount": total
-                }
+                inv = extract_invoice(text)
+                date_text = extract_date_from_text(text)
+                invoice_date = normalize_date(date_text)
+                total = float(extract_total(text) or 0)
 
-            voucher_total += total
+                if check_duplicate(db_df, emp, inv, str(invoice_date), total):
+                    return {
+                        "status": "DUPLICATE_CLAIM",
+                        "invoice_number": inv
+                    }
 
-            voucher_records.append({
-                "Employee_Code": emp,
-                "Invoice_No": inv,
-                "Date": str(invoice_date),
-                "Total_Amount": round(total, 2),
-                "Claim_Type": ctype
-            })
+                voucher_total += total
 
-        # ✅ voucher validation
-        if voucher_total > expected + 5:
-            return {
-                "status": "AMOUNT_MISMATCH",
-                "expected_bill_amount": expected,
-                "extracted_attachment_total": voucher_total
-            }
+                all_records.append({
+                    "Employee_Code": emp,
+                    "Invoice_No": inv,
+                    "Date": str(invoice_date),
+                    "Total_Amount": total,
+                    "Claim_Type": ctype
+                })
 
-        all_records.extend(voucher_records)
         grand_total += voucher_total
 
-    # ✅ final claim validation
-    if grand_total > total_expected + 5:
+    # final claim validation
+    if grand_total > total_expected:
         return {
             "status": "CLAIM_TOTAL_MISMATCH",
             "total_attachments_amount": grand_total
         }
 
-    # ✅ save only after all validations pass
     insert_into_excel(all_records)
 
     return {
         "status": "NEW_CLAIM",
         "records_saved": len(all_records),
-        "total_attachments_amount": grand_total
+        "total_amount": grand_total
     }
 
 # ================= FLASK API =================
